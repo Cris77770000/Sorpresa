@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestra Sorpresa</title>
+    <style>
+        /* ESTILOS Y DISEÑO GENERAL */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #ffe3e3, #fbc7d4); color: #4a4a4a; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        
+        /* 1. PANTALLA DE BLOQUEO */
+        #pantalla-bloqueo {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #ffe3e3, #fbc7d4);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.8s ease, visibility 0.8s;
+            text-align: center; padding: 20px;
+        }
+        #pantalla-bloqueo.oculto { opacity: 0; visibility: hidden; }
+        #pantalla-bloqueo h2 { color: #ff4d6d; margin-bottom: 20px; font-size: 1.4rem; }
+        
+        /* CORAZÓN INTERACTIVO */
+        .contenedor-corazon { width: 150px; height: 150px; cursor: pointer; position: relative; }
+        .corazon-svg { width: 100%; height: 100%; }
+        .corazon-fondo { fill: #fff; stroke: #ff4d6d; stroke-width: 2; transition: fill 0.3s ease; }
+        #clip-llenado rect { transition: y 0.3s ease; }
+
+        /* SECCIONES COMPARTIDAS */
+        .section { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 25px; text-align: center; }
+        h1 { font-size: 1.5rem; color: #ff4d6d; margin-bottom: 15px; }
+
+        /* 2. PRESENTACIÓN Y CONTADOR */
+        .names-title { font-size: 1.8rem; font-weight: bold; color: #ff4d6d; margin-bottom: 5px; }
+        .anniversary-date { font-size: 1rem; color: #7a7a7a; margin-bottom: 15px; font-style: italic; }
+        .grid-timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .time-box { background: #fff0f3; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 1.2rem; color: #ff4d6d; }
+        .time-box span { display: block; font-size: 0.7rem; color: #a3a3a3; text-transform: uppercase; font-weight: normal; }
+
+        /* 3. CD REPRODUCTOR */
+        .cd-container { position: relative; width: 200px; height: 200px; margin: 20px auto; }
+        .cd { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, #333 40%, #111 41%, #333 42%, #000 100%); border: 5px solid #222; box-shadow: 0 8px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
+        .cd-center { width: 50px; height: 50px; background: white; border-radius: 50%; border: 4px solid #ff4d6d; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; }
+        .play-btn { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 14px solid #ff4d6d; margin-left: 4px; }
+        .pause-btn { width: 12px; height: 14px; border-left: 4px solid #ff4d6d; border-right: 4px solid #ff4d6d; display: none; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .playing { animation: rotate 4s linear infinite; }
+
+        /* 4. LÍNEA DE TIEMPO (TIMELINE) */
+        .timeline { position: relative; width: 100%; text-align: left; padding: 10px 0; }
+        .timeline::before { content: ''; position: absolute; left: 15px; top: 0; height: 100%; width: 2px; background: #fbc7d4; }
+        .timeline-item { position: relative; margin-bottom: 30px; padding-left: 40px; }
+        .timeline-badge { position: absolute; left: 4px; top: 2px; width: 24px; height: 24px; background: #ff4d6d; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; z-index: 2; }
+        .timeline-content { background: #fff0f3; padding: 15px; border-radius: 15px; }
+        .timeline-date { font-weight: bold; color: #ff4d6d; font-size: 0.9rem; margin-bottom: 5px; }
+        .timeline-content h3 { font-size: 1.1rem; margin-bottom: 5px; color: #4a4a4a; }
+        .timeline-content p { font-size: 0.9rem; line-height: 1.4; color: #666; margin-bottom: 10px; }
+        .timeline-content img { width: 100%; border-radius: 10px; display: block; object-fit: cover; max-height: 150px; }
+
+        /* 5. CARRUSEL */
+        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 15px; margin-top: 10px; gap: 10px; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; object-fit: cover; height: 250px; border-radius: 15px; }
+
+        /* 6. CARTA DE AMOR */
+        .letter-text { text-align: left; line-height: 1.6; color: #5a5a5a; font-style: italic; white-space: pre-line; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. PANTALLA DE BLOQUEO (EL CORAZÓN INTERACTIVO) -->
+    <div id="pantalla-bloqueo">
+        <h2>Toca el corazón para llenarlo de amor... ❤️</h2>
+        <div class="contenedor-corazon" onclick="tocarCorazon()">
+            <svg class="corazon-svg" viewBox="0 0 32 29.6">
+                <defs>
+                    <clipPath id="clip-llenado">
+                        <rect x="0" y="32" width="32" height="32" />
+                    </clipPath>
+                </defs>
+                <path class="corazon-fondo" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+                <path fill="#ff4d6d" clip-path="url(#clip-llenado)" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- 2. PRESENTACIÓN Y CONTADOR -->
+    <div class="section">
+        <div class="names-title">Marcel y Cristina</div>
+        <div class="anniversary-date">Juntos desde el 25 de Octubre de 2024</div>
+        <div class="grid-timer">
+            <div class="time-box"><div id="dias">00</div><span>Días</span></div>
+            <div class="time-box"><div id="horas">00</div><span>Horas</span></div>
+            <div class="time-box"><div id="minutos">00</div><span>Min</span></div>
+            <div class="time-box"><div id="segundos">00</div><span>Seg</span></div>
+        </div>
+    </div>
+
+    <!-- 3. CD REPRODUCTOR DE MÚSICA -->
+    <div class="section">
+        <h1>Nuestra Canción</h1>
+        <div class="cd-container">
+            <div class="cd" id="vinyl"></div>
+            <div class="cd-center" onclick="toggleMusic()">
+                <div class="play-btn" id="pBtn"></div>
+                <div class="pause-btn" id="paBtn"></div>
+            </div>
+        </div>
+        <audio id="cancion" src="musica.mp3"></audio>
+    </div>
+
+    <!-- 4. LÍNEA DE TIEMPO (TIMELINE) -->
+    <div class="section">
+        <h1>Nuestra Historia</h1>
+        <div class="timeline">
+            <!-- Momento 1 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">❤️</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">9 de Agosto 2024</div>
+                    <h3>Así empezó todo ...</h3>
+                    <p>Tu número en un papel, una pregunta sobre un bar y empezamos a hablar.</p>
+                    <img src="foto10.jpg" alt="Momento 1">
+                </div>
+            </div>
+            <!-- Momento 2 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">23 de Septiembre 2024</div>
+                    <h3>Tu primer regalo en 3D</h3>
+                    <p></p>
+                    <img src="foto11.jpg" alt="Momento 2">
+                </div>
+            </div>
+            <!-- Momento 3 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">30 de Octubre 2024</div>
+                    <h3>Primer TE QUIERO</h3>
+                    <p>Tu pensando que me hacía la tonta y yo sin tener ni idea, no me lo podía creer.</p>
+                    <img src="foto12.jpg" alt="Momento 3">
+                </div>
+            </div>
+            <!-- Momento 4 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2024</div>
+                    <h3>El lugar donde nos conocimos</h3>
+                    <p>La puerta del diablo, la silla, los mensajes secretos .... nuestras cositas.</p>
+                    <img src="foto13.jpg" alt="Momento 4">
+                </div>
+            </div>
+            <!-- Momento 5 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2025</div>
+                    <h3>Muchas cosas en común</h3>
+                    <p>Poco a poco nos fuimos conociendo mejor.</p>
+                    <img src="foto14.jpg" alt="Momento 5">
+                </div>
+            </div>
+            <!-- Momento 6 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">9 de Diciembre 2025</div>
+                    <h3>Tus locuras...</h3>
+                    <p>Aún me sigue impresionando</p>
+                    <img src="foto15.jpg" alt="Momento 6">
+                </div>
+            </div>
+            <!-- Momento 7 -->
+            <div class="timeline-item">
+                <div class="timeline-badge">✨</div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2 de Enero 2026</div>
+                    <h3>India</h3>
+                    <p>Me hiciste el regalo más especial de mi vida. Nunca lo olvidaré!</p>
+                    <img src="foto16.jpg" alt="Momento 7">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. CARRUSEL DE MOMENTOS -->
+    <div class="section">
+        <h1>Nuestros Momentos</h1>
+        <div class="carousel">
+            <img src="foto_carrusel1.jpg" alt="foto 1">
+            <img src="foto_carrusel2.jpg" alt="foto 2">
+            <img src="foto_carrusel1.jpg" alt="foto 3">
+            <img src="foto_carrusel2.jpg" alt="foto 4">
+            <img src="foto_carrusel1.jpg" alt="foto 5">
+            <img src="foto_carrusel2.jpg" alt="foto 6">
+            <img src="foto_carrusel2.jpg" alt="foto 7">
+            <img src="foto_carrusel3.jpg" alt="foto 8">
+        </div>
+    </div>
+
+    <!-- 6. LA CARTA DE AMOR -->
+    <div class="section">
+        <h1>Para Ti...</h1>
+        <div class="letter-text">
+            Querido/a [Nombre],
+
+            Escribo esto porque eres la persona más importante de mi vida. Gracias por cada segundo, sonrisa y aventura compartida. 
+
+            ¡Te amo hoy y siempre!
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE TU ANIVERSARIO ---
+        const fechaAniversario = new Date(2024, 9, 25, 0, 0, 0); 
+
+        // --- SISTEMA DEL CORAZÓN INTERACTIVO ---
+        let toques = 0;
+        const toquesTotalesNecesarios = 5; 
+        const rectMascara = document.querySelector('#clip-llenado rect');
+        const pantallaBloqueo = document.getElementById('pantalla-bloqueo');
+
+        function tocarCorazon() {
+            if (toques < toquesTotalesNecesarios) {
+                toques++;
+                const porcentajeLlenado = toques / toquesTotalesNecesarios;
+                const nuevaY = 32 - (32 * porcentajeLlenado);
+                rectMascara.setAttribute('y', nuevaY);
+
+                if (toques === toquesTotalesNecesarios) {
+                    setTimeout(() => {
+                        pantallaBloqueo.classList.add('oculto');
+                        setInterval(actualizarContador, 1000);
+                    }, 400);
+                }
+            }
+        }
+
+        // --- MOTOR DEL CONTADOR DE TIEMPO ---
+        function actualizarContador() {
+            const ahora = new Date();
+            const diferencia = ahora - fechaAniversario;
+
+            const d = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+            document.getElementById('dias').innerText = d < 10 ? '0' + d : d;
+            document.getElementById('horas').innerText = h < 10 ? '0' + h : h;
+            document.getElementById('minutos').innerText = m < 10 ? '0' + m : m;
+            document.getElementById('segundos').innerText = s < 10 ? '0' + s : s;
+        }
+
+        // --- CONTROL DEL REPRODUCTOR DE CD ---
+        const musica = document.getElementById('cancion');
+        const vinilo = document.getElementById('vinyl');
+        const playBtn = document.getElementById('pBtn');
+        const pauseBtn = document.getElementById('paBtn');
+
+        function toggleMusic() {
+            if (musica.paused) {
+                musica.play();
+                vinilo.classList.add('playing');
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+            } else {
+                musica.pause();
+                vinilo.classList.remove('playing');
+                playBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
